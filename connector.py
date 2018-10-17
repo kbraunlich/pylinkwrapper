@@ -6,7 +6,8 @@ import time
 import re
 from psychopy.tools.monitorunittools import deg2pix, pix2deg
 from psychopy import event
-
+import numpy as _np
+#%%
 
 class Connect(object):
     """
@@ -234,7 +235,70 @@ class Connect(object):
         assert os.path.isdir(spath), 'EDF destination directory does not exist.'
         self.tracker.receiveDataFile(self.edfname, fpath)
         self.tracker.close()
+        
+        
+    def fix_check_locs(self, xcenters, ycenters, size, ftime, button):
+        """
+        Checks that fixation is maintained for certain time.
 
+        :param size: Length of one side of box in degrees visual angle.
+        :type size: float or int
+        :param ftime: Length of time to check for fixation in seconds.
+        :type ftime: float
+        :param button: Key to press to recalibrate eye-tracker.
+        :type button: char
+        """
+            
+        # Calculate Fix check borders
+        size = deg2pix(size, self.win.monitor) / 2.0
+
+        mBoundaries = _np.zeros((len(xcenters),4))
+        for i,(x,y) in enumerate(zip(xcenters, ycenters)):
+           mBoundaries[i,:] = [x - size, x + size] + [y - size, y + size] 
+          
+            
+        # Set status message & Draw box
+        self.set_status('Fixation Check')
+        bxmsg = 'draw_box {} {} {} {} 1'.format(xbdr[0], ybdr[0], xbdr[1],
+                                                ybdr[1])
+        self.tracker.sendCommand(bxmsg)
+
+        # Begin recording
+        self.tracker.startRecording(0, 0, 1, 1)
+
+        # Begin polling
+        fixtime = time.clock()
+        while self.realconnect:  # only start check loop if real connection
+
+            # Check for recalibration button
+            keys = event.getKeys(button)
+            if keys:
+                self.tracker.stopRecording()
+                self.calibrate()
+                break
+
+            gaze = self.get_gaze()
+
+            # what a box?
+            box,inBox=0,False
+            for x0,x1,y0,y1 in mBoundaries:
+                if x0 < gaze[0] < x1 and y0 < gaze[1] < y1:
+                    inBox=True
+                    box+=1
+                    break
+                                
+            # long enough?
+            if inBox:
+                if (time.clock() - fixtime) > ftime:
+                    self.tracker.stopRecording()
+                    break
+            else:
+                # Reset clock if not in box
+                fixtime = time.clock()
+            
+        return box
+                
+                
     def fix_check(self, size, ftime, button):
         """
         Checks that fixation is maintained for certain time.
