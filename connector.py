@@ -239,6 +239,12 @@ class Connect(object):
         
     def fix_check_locs(self, xcenters, ycenters, size, ftime, button):
         """
+        Like fix, check but checks multiple boxes, returns the fixated box 
+        number. 
+        
+        Can be used for time-cost gaze-contingent display.
+        
+        
         Checks that fixation is maintained for certain time.
 
         :param size: Length of one side of box in degrees visual angle.
@@ -267,6 +273,7 @@ class Connect(object):
         self.tracker.startRecording(0, 0, 1, 1)
 
         # Begin polling
+        
         fixtime = time.clock()
         while self.realconnect:  # only start check loop if real connection
 
