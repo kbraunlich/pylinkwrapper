@@ -239,13 +239,10 @@ class Connect(object):
         
     def fix_check_locs(self, xcenters, ycenters, size, ftime, button):
         """
-        Like fix, check but checks multiple boxes, returns the fixated box 
-        number. 
+        Like fix_check, check but checks multiple boxes, returns the fixated box 
+        number.         
         
-        Can be used for time-cost gaze-contingent display.
-        
-        
-        Checks that fixation is maintained for certain time.
+        Checks that fixation is maintained for 'ftime'.
 
         :param size: Length of one side of box in degrees visual angle.
         :type size: float or int
